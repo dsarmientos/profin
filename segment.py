@@ -58,6 +58,9 @@ def main(infile):
     combined = ndimage.binary_fill_holes(combined)
     mahotas.imsave('12combined_noholes%s.jpg' % k, combined)
 
+    borders = mahotas.labeled.borders(mahotas.label(combined)[0])
+    mahotas.imsave('12aborders%s.jpg' % k, borders)
+
     cells = f * combined
     mahotas.imsave('13cells%s.jpg' % k, cells)
 
@@ -68,17 +71,31 @@ def main(infile):
     seeds, nr_nuclei = mahotas.label(rmin)
     print nr_nuclei
     mahotas.imsave('15overlay.jpg', pymorph.overlay(blue_component, rmin))
-    mahotas.imsave('16seedds.jpg', seeds)
+    mahotas.imsave('16seeds.jpg', seeds)
+    print np.unique(borders)
+    final = np.zeros(borders.shape)
+    final[borders] = 255
+    print np.unique(final)
+    mahotas.imsave('16aborders.jpg', final)
+    pylab.jet()
+    mahotas.imsave('17foverlay.jpg', final + seeds)
+    pylab.gray()
+    mahotas.imsave('18foverlay.jpg', final + seeds)
+    mahotas.imsave(
+        'final.jpg',
+        pymorph.overlay(blue_component, rmin,
+                        borders)
+    )
 
     #watershed
-    dist = ndimage.distance_transform_edt(combined)
-    dist = dist.max() - dist
-    dist -= dist.min()
-    dist = dist/float(dist.ptp()) * 255
-    dist = dist.astype(np.uint8)
-    mahotas.imsave('17distance.jpg', dist)
-    nuclei = mahotas.cwatershed(blue_component, seeds)
-    mahotas.imsave('18wshed.jpg', nuclei)
+    #dist = ndimage.distance_transform_edt(combined)
+    #dist = dist.max() - dist
+    #dist -= dist.min()
+    #dist = dist/float(dist.ptp()) * 255
+    #dist = dist.astype(np.uint8)
+    #mahotas.imsave('17distance.jpg', dist)
+    #nuclei = mahotas.cwatershed(blue_component, seeds)
+    #mahotas.imsave('18wshed.jpg', nuclei)
 
 
 def segment_kmeans(img, k):
