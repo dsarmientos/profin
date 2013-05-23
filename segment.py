@@ -25,27 +25,48 @@ def main(infile):
     masked = f * mask
     mahotas.imsave('masked%s.jpg' % k, masked)
 
-    clustered2 = segment_kmeans(masked, 4)
-    clustered2 = clustered2.reshape(f.shape)
-    mahotas.imsave('kmeans2%s.jpg' % k, clustered2)
+    k = 4
+    clustered2 = segment_kmeans(masked, k)
+    mahotas.imsave('kmeans2%s.jpg' % k, clustered2.reshape(f.shape))
+
+    # for i in xrange(k):
+    #     t = np.copy(clustered2)
+    #     t[(t != i)] = 0
+    #     mahotas.imsave('k%s.jpg' % i, t.reshape(f.shape))
 
     # Sin el mas claro, y los dos mas oscuros
-    clustered2[(clustered2 == 1) | (clustered2) == k-1] = 0
+    clustered2[clustered2 != k-2] = 0
+    clustered2[clustered2 == k-2] = 1
+    print np.unique(clustered2)
+    clustered2 = clustered2.reshape(f.shape)
     mahotas.imsave('kmeans2f%s.jpg' % k, clustered2)
+    # return
 
-    labeled, _  = mahotas.label(clustered)
+    labeled, _  = mahotas.label(mask)
     sizes = mahotas.labeled.labeled_size(labeled)
-    too_big = np.where(sizes > 10000)
+    too_big = np.where(sizes > 30000)
+    too_small = np.where(sizes < 1000)
     labeled1 = mahotas.labeled.remove_regions(labeled, too_big)
+    labeled1[labeled1 != 0] = 1
+    labeled1 = labeled1.reshape(f.shape)
     mahotas.imsave('labeled1%s.jpg' % k, labeled1)
 
     labeled, _  = mahotas.label(clustered2)
     sizes = mahotas.labeled.labeled_size(labeled)
-    too_big = np.where(sizes > 10000)
+    too_small = np.where(sizes < 1000)
+    too_big = np.where(sizes > 20000)
     labeled2 = mahotas.labeled.remove_regions(labeled, too_big)
+    labeled2[labeled2 != 0] = 1
+    labeled2 = labeled2.reshape(f.shape)
     mahotas.imsave('labeled2%s.jpg' % k, labeled2)
 
-
+    comb = labeled1 + labeled2
+    print np.unique(comb)
+    for i in np.unique(comb):
+        t = np.copy(comb)
+        comb[(comb != i)] = 0
+        mahotas.imsave('comb%s.jpg' % i, t.reshape(f.shape))
+    mahotas.imsave('comb%s.jpg' % k, labeled2)
 
 
 
