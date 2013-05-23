@@ -1,5 +1,4 @@
 import sys
-import PIL
 import ipdb
 
 import numpy as np
@@ -16,24 +15,46 @@ def main(infile):
     img = mahotas.imread(infile)
     blue_component = img[:,:,B]
     f = ndimage.gaussian_filter(blue_component, 12)
-    #f = mahotas.gaussian_filter(blue_component, 12)
-    #f = f > f.mean()
-    p = f.flatten()
-    centroids, _ = kmeans(p,k)
-    centroids.sort()
-    clustered, _ = vq(p, centroids)
+    clustered = segment_kmeans(f, k)
     clustered[clustered == k-1] = 0
     print np.unique(clustered)
     mask = clustered.reshape(f.shape)
-
-    masked = blue_component * mask
-
     mahotas.imsave('mask%s.jpg' % k, mask)
-    mahotas.imsave('masked%s.jpg' % k, masked)
-    #save_imarray(f, 'out.jpg')
 
-def save_imarray(imarray, outfile):
-    PIL.Image.fromarray(imarray).save(outfile)
+    pylab.gray()
+    masked = f * mask
+    mahotas.imsave('masked%s.jpg' % k, masked)
+
+    clustered2 = segment_kmeans(masked, 4)
+    clustered2 = clustered2.reshape(f.shape)
+    mahotas.imsave('kmeans2%s.jpg' % k, clustered2)
+
+    # Sin el mas claro, y los dos mas oscuros
+    clustered2[(clustered2 == 1) | (clustered2) == k-1] = 0
+    mahotas.imsave('kmeans2f%s.jpg' % k, clustered2)
+
+    labeled, _  = mahotas.label(clustered)
+    sizes = mahotas.labeled.labeled_size(labeled)
+    too_big = np.where(sizes > 10000)
+    labeled1 = mahotas.labeled.remove_regions(labeled, too_big)
+    mahotas.imsave('labeled1%s.jpg' % k, labeled1)
+
+    labeled, _  = mahotas.label(clustered2)
+    sizes = mahotas.labeled.labeled_size(labeled)
+    too_big = np.where(sizes > 10000)
+    labeled2 = mahotas.labeled.remove_regions(labeled, too_big)
+    mahotas.imsave('labeled2%s.jpg' % k, labeled2)
+
+
+
+
+
+def segment_kmeans(img, k):
+    f = img.flatten()
+    centroids, _ = kmeans(f,k)
+    centroids.sort()
+    clustered, _ = vq(f, centroids)
+    return clustered
 
 if __name__ == '__main__':
     try:
