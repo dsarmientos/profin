@@ -47,26 +47,25 @@ def main(infile):
     too_big = np.where(sizes > 30000)
     too_small = np.where(sizes < 1000)
     labeled1 = mahotas.labeled.remove_regions(labeled, too_big)
+    labeled1 = mahotas.labeled.remove_regions(labeled1, too_small)
     labeled1[labeled1 != 0] = 1
     labeled1 = labeled1.reshape(f.shape)
     mahotas.imsave('labeled1%s.jpg' % k, labeled1)
 
     labeled, _  = mahotas.label(clustered2)
     sizes = mahotas.labeled.labeled_size(labeled)
-    too_small = np.where(sizes < 1000)
     too_big = np.where(sizes > 20000)
+    too_small = np.where(sizes < 1000)
     labeled2 = mahotas.labeled.remove_regions(labeled, too_big)
+    labeled2 = mahotas.labeled.remove_regions(labeled2, too_small)
     labeled2[labeled2 != 0] = 1
     labeled2 = labeled2.reshape(f.shape)
     mahotas.imsave('labeled2%s.jpg' % k, labeled2)
 
     comb = labeled1 + labeled2
+    comb[(comb != 0)] = 1
     print np.unique(comb)
-    for i in np.unique(comb):
-        t = np.copy(comb)
-        comb[(comb != i)] = 0
-        mahotas.imsave('comb%s.jpg' % i, t.reshape(f.shape))
-    mahotas.imsave('comb%s.jpg' % k, labeled2)
+    mahotas.imsave('comb%s.jpg' % k, comb)
 
 
 
