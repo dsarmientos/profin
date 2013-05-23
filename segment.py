@@ -30,20 +30,24 @@ def main(infile):
     mahotas.imsave('kmeans2%s.jpg' % k, clustered2)
 
     # Sin el mas claro, y los dos mas oscuros
-    clustered2[(clustered2 == 1) | (clustered2) == k-1] = 0
+    k = 4
+    clustered2[(clustered2 != k-2)] = 0
+    clustered2[(clustered2 == k-2)] = 1
     mahotas.imsave('kmeans2f%s.jpg' % k, clustered2)
 
-    labeled, _  = mahotas.label(clustered)
+    labeled, _  = mahotas.label(mask)
+    print np.unique(labeled), labeled.shape
     sizes = mahotas.labeled.labeled_size(labeled)
-    too_big = np.where(sizes > 10000)
+    too_big = np.where(sizes > 15000)
     labeled1 = mahotas.labeled.remove_regions(labeled, too_big)
     mahotas.imsave('labeled1%s.jpg' % k, labeled1)
 
     labeled, _  = mahotas.label(clustered2)
     sizes = mahotas.labeled.labeled_size(labeled)
-    too_big = np.where(sizes > 10000)
+    too_big = np.where(sizes > 15000)
     labeled2 = mahotas.labeled.remove_regions(labeled, too_big)
     mahotas.imsave('labeled2%s.jpg' % k, labeled2)
+    return
 
 
 
