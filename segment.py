@@ -14,16 +14,19 @@ R, G, B = range(3)
 def main(infile):
     img = mahotas.imread(infile)
     blue_component = img[:,:,B]
-    f = ndimage.gaussian_filter(blue_component, 12)
 
+
+    pylab.gray()
     k = 3
+    f = ndimage.gaussian_filter(blue_component, 12)
+    mahotas.imsave('000blue%s.jpg' % k, f)
+
     clustered = segment_kmeans(f, k)
     clustered[clustered == k-1] = 0
     mask = clustered.reshape(f.shape)
     mask = ndimage.binary_fill_holes(mask)
     mahotas.imsave('00masknoholes%s.jpg' % k, mask)
 
-    pylab.gray()
     masked = f * mask
     mahotas.imsave('01masked%s.jpg' % k, masked)
 
@@ -69,33 +72,40 @@ def main(infile):
 
     rmin = mahotas.regmin(cells)
     seeds, nr_nuclei = mahotas.label(rmin)
-    print nr_nuclei
     mahotas.imsave('15overlay.jpg', pymorph.overlay(blue_component, rmin))
     mahotas.imsave('16seeds.jpg', seeds)
-    print np.unique(borders)
     final = np.zeros(borders.shape)
-    final[borders] = 255
-    print np.unique(final)
+    final[borders] = 1
     mahotas.imsave('16aborders.jpg', final)
-    pylab.jet()
     mahotas.imsave('17foverlay.jpg', final + seeds)
-    pylab.gray()
     mahotas.imsave('18foverlay.jpg', final + seeds)
     mahotas.imsave(
-        'final.jpg',
+        '19final.jpg',
         pymorph.overlay(blue_component, rmin,
                         borders)
     )
+    img2 = np.copy(img)
+    img2[borders] = [0,0,0]
+    img2[rmin] = [5,250,42]
+    mahotas.imsave('20t.jpg', img2)
 
     #watershed
-    #dist = ndimage.distance_transform_edt(combined)
-    #dist = dist.max() - dist
-    #dist -= dist.min()
-    #dist = dist/float(dist.ptp()) * 255
-    #dist = dist.astype(np.uint8)
-    #mahotas.imsave('17distance.jpg', dist)
-    #nuclei = mahotas.cwatershed(blue_component, seeds)
-    #mahotas.imsave('18wshed.jpg', nuclei)
+    gradient = ndimage.morphology.morphological_gradient(final, size=(3,3))
+    gradient = gradient.astype(np.uint8)
+    mahotas.imsave('21gradient.jpg', gradient)
+    wshed, lines = mahotas.cwatershed(gradient, seeds, return_lines=True)
+    print '%d cells.' % len(np.unique(wshed))
+    pylab.jet()
+    mahotas.imsave('22wshed.jpg', wshed)
+    borders = mahotas.labeled.borders(wshed)
+    mahotas.imsave('23labeled.jpg', borders)
+    img2 = np.copy(img)
+    img2[borders] = [0,0,0]
+    mahotas.imsave('24t.jpg', img2)
+    img2 = np.copy(img)
+    img2[lines] = [0,0,0]
+    mahotas.imsave('25t.jpg', img2)
+
 
 
 def segment_kmeans(img, k):
@@ -129,8 +139,6 @@ def labeled_to_binary(labeled, copy=False):
         c = np.copy(labeled)
         c[c != 0] = 1
         return c
-
-
 
 if __name__ == '__main__':
     try:
