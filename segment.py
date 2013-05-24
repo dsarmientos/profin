@@ -67,8 +67,6 @@ def main(infile):
         mahotas.imsave('12combined_noholes%s.jpg' % k, combined)
 
     borders = mahotas.labeled.borders(mahotas.label(combined)[0])
-    if DEBUG:
-        mahotas.imsave('12aborders%s.jpg' % k, borders)
 
     cells = f * combined
     cells[cells == 0] = 255
@@ -77,12 +75,9 @@ def main(infile):
 
     rmin = mahotas.regmin(cells)
     seeds, nr_nuclei = mahotas.label(rmin)
-    mahotas.imsave('15overlay.jpg', pymorph.overlay(blue_component, rmin))
     mahotas.imsave('16seeds.jpg', seeds)
     final = np.zeros(borders.shape)
     final[borders] = 1
-    mahotas.imsave('16aborders.jpg', final)
-    mahotas.imsave('17foverlay.jpg', final + seeds)
     mahotas.imsave(
         '19final.jpg',
         pymorph.overlay(blue_component, rmin,
@@ -102,7 +97,6 @@ def main(infile):
     pylab.jet()
     mahotas.imsave('22wshed.jpg', wshed)
     borders = mahotas.labeled.borders(wshed)
-    mahotas.imsave('23labeled.jpg', borders)
     img[borders] = [0,0,0]
     mahotas.imsave('24t.jpg', img)
 
