@@ -1,5 +1,6 @@
+import os
 import sys
-import ipdb
+
 import numpy as np
 import mahotas
 import pymorph
@@ -14,67 +15,69 @@ R, G, B = range(3)
 
 def main(infile):
     img = mahotas.imread(infile)
+    infile = os.path.splitext(
+        os.path.basename(infile))[0]
     blue_component = img[:,:,B]
 
     pylab.gray()
     k = 3
     f = ndimage.gaussian_filter(blue_component, 12)
     if DEBUG:
-        mahotas.imsave('000blue%s.jpg' % k, f)
+        mahotas.imsave('%s-input.jpg' % infile, f)
 
     clustered = segment_kmeans(f, k)
     clustered[clustered == k-1] = 0
     mask = ndimage.binary_fill_holes(clustered)
 
     if DEBUG:
-        mahotas.imsave('00masknoholes%s.jpg' % k, mask)
+        mahotas.imsave('00masknoholes%s.jpg' % infile, mask)
 
     masked = f * mask
 
     if DEBUG:
-        mahotas.imsave('01masked%s.jpg' % k, masked)
+        mahotas.imsave('01masked%s.jpg' % infile, masked)
 
     k = 4
     clustered2 = segment_kmeans(masked, k)
 
     if DEBUG:
-        mahotas.imsave('02kmeans2%s.jpg' % k, clustered2)
+        mahotas.imsave('02kmeans2%s.jpg' % infile, clustered2)
 
     clustered2[(clustered2 != k-2)] = 0
     clustered2[(clustered2 == k-2)] = 1
 
     if DEBUG:
-        mahotas.imsave('03kmeans2f%s.jpg' % k, clustered2)
+        mahotas.imsave('03kmeans2f%s.jpg' % infile, clustered2)
 
     clustered2 = ndimage.binary_fill_holes(clustered2)
 
     if DEBUG:
-        mahotas.imsave('04kmeans2fnoholes%s.jpg' % k, clustered2)
+        mahotas.imsave('04kmeans2fnoholes%s.jpg' % infile, clustered2)
 
     labeled, _  = mahotas.label(mask)
     labeled1 = remove_by_size(labeled, 1500, 16000)
 
     if DEBUG:
-        mahotas.imsave('05labeled1%s.jpg' % k, labeled)
-        mahotas.imsave('07labeled1f%s.jpg' % k, labeled1)
+        mahotas.imsave('05labeled1%s.jpg' % infile, labeled)
+        mahotas.imsave('07labeled1f%s.jpg' % infile, labeled1)
 
     labeled, _  = mahotas.label(clustered2)
     labeled2 = remove_by_size(labeled, 1500, 18000)
 
     if DEBUG:
-        mahotas.imsave('08labeled2f%s.jpg' % k, labeled)
-        mahotas.imsave('10labeled2f%s.jpg' % k, labeled2)
+        mahotas.imsave('08labeled2f%s.jpg' % infile, labeled)
+        mahotas.imsave('10labeled2f%s.jpg' % infile, labeled2)
 
     combined = labeled1 + labeled2
 
     labeled_to_binary(combined)
     if DEBUG:
-        mahotas.imsave('11combined%s.jpg' % k, combined)
+        mahotas.imsave('11combined%s.jpg' % infile, combined)
 
     combined = ndimage.binary_fill_holes(combined)
 
     if DEBUG:
-        mahotas.imsave('12combined_noholes%s.jpg' % k, combined)
+        mahotas.imsave('12combined_noholes%s.jpg' % infile, combined)
 
     borders = mahotas.labeled.borders(mahotas.label(combined)[0])
 
@@ -82,15 +85,14 @@ def main(infile):
     cells[cells == 0] = 255
 
     if DEBUG:
-        mahotas.imsave('14cellsw%s.jpg' % k, cells)
+        mahotas.imsave('14cellsw%s.jpg' % infile, cells)
 
     rmin = mahotas.regmin(cells)
     seeds, nr_nuclei = mahotas.label(rmin)
 
     if DEBUG:
-        mahotas.imsave('15seeds.jpg', seeds)
         mahotas.imsave(
-            '16gscale-final.jpg',
+            '16gscale-final%s.jpg' % infile,
             pymorph.overlay(blue_component, rmin,
                         borders)
         )
@@ -98,28 +100,28 @@ def main(infile):
     img2 = np.copy(img)
     img2[borders] = [0,0,0]
     img2[rmin] = [5,250,42]
-    mahotas.imsave('17nowshed-final.jpg', img2)
+    mahotas.imsave('%s-outputcells.jpg' % (infile), img2)
 
     #watershed
     gradient = ndimage.morphology.morphological_gradient(combined, size=(3,3))
     gradient = gradient.astype(np.uint8)
     if DEBUG:
-        mahotas.imsave('18gradient.jpg', gradient)
+        mahotas.imsave('%s-gradient.jpg' % infile, gradient)
     wshed, lines = mahotas.cwatershed(gradient, seeds, return_lines=True)
 
-    if DEBUG:
-        print '%d cells.' % len(np.unique(wshed))
 
     pylab.jet()
 
     if DEBUG:
         mahotas.imsave('19wshed.jpg', wshed)
 
+    ncells =  len(np.unique(wshed)) - 1
+    print '%d cells.' % ncells
     borders = mahotas.labeled.borders(wshed)
 
     img[borders] = [0,0,0]
     img[rmin] = [5,250,42]
-    mahotas.imsave('20wshed-final.jpg', img)
+    mahotas.imsave('20%s-output-%dcells.jpg' % (infile, ncells), img)
 
 def segment_kmeans(img, k):
     f = img.flatten()
