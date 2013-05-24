@@ -79,9 +79,6 @@ def main(infile):
 
     borders = mahotas.labeled.borders(mahotas.label(combined)[0])
 
-    if DEBUG:
-        mahotas.imsave('12aborders%s.jpg' % k, borders)
-
     cells = f * combined
     cells[cells == 0] = 255
 
@@ -92,12 +89,9 @@ def main(infile):
     seeds, nr_nuclei = mahotas.label(rmin)
 
     if DEBUG:
-        mahotas.imsave('15overlay.jpg', pymorph.overlay(blue_component, rmin))
-        mahotas.imsave('16seeds.jpg', seeds)
-
-    if DEBUG:
+        mahotas.imsave('15seeds.jpg', seeds)
         mahotas.imsave(
-            '17gscale-final.jpg',
+            '16gscale-final.jpg',
             pymorph.overlay(blue_component, rmin,
                         borders)
         )
@@ -105,13 +99,13 @@ def main(infile):
     img2 = np.copy(img)
     img2[borders] = [0,0,0]
     img2[rmin] = [5,250,42]
-    mahotas.imsave('18nowshed-final.jpg', img2)
+    mahotas.imsave('17nowshed-final.jpg', img2)
 
     #watershed
     gradient = ndimage.morphology.morphological_gradient(combined, size=(3,3))
     gradient = gradient.astype(np.uint8)
     if DEBUG:
-        mahotas.imsave('19gradient.jpg', gradient)
+        mahotas.imsave('18gradient.jpg', gradient)
     wshed, lines = mahotas.cwatershed(gradient, seeds, return_lines=True)
 
     if DEBUG:
@@ -120,15 +114,13 @@ def main(infile):
     pylab.jet()
 
     if DEBUG:
-        mahotas.imsave('20wshed.jpg', wshed)
+        mahotas.imsave('19wshed.jpg', wshed)
 
     borders = mahotas.labeled.borders(wshed)
 
-    if DEBUG:
-        mahotas.imsave('21labeled.jpg', borders)
     img[borders] = [0,0,0]
     img[rmin] = [5,250,42]
-    mahotas.imsave('22wshed-final.jpg', img)
+    mahotas.imsave('20wshed-final.jpg', img)
 
 def segment_kmeans(img, k):
     f = img.flatten()
