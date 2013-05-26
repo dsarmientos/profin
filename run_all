@@ -1,0 +1,2 @@
+#!/bin/bash
+for FILE in $(ls input/); do python segment.py input/$FILE; done
