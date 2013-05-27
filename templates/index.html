@@ -58,7 +58,7 @@
           <p>
             <h3>Elige una imagen de citolog&iacute;a para procesar</h3>
             {{ form.image }}
-            <a href="{% url 'main.views.segment'%}?img_name={{img}}" class="btn btn-primary pull-right"/>Segmentar &gt;&gt;</a>
+            {% if img %} <a href="{% url 'main.views.segment'%}?img_name={{img}}" class="btn btn-primary pull-right"/>Segmentar &gt;&gt;</a> {% endif %}
           </p>
         </div>
       </form>

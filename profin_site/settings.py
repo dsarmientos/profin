@@ -1,5 +1,5 @@
 # Django settings for profin_site project.
-
+import os
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
@@ -11,7 +11,7 @@ MANAGERS = ADMINS
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
+        'ENGINE': 'django.db.backends.',  # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
         'NAME': '',                      # Or path to database file if using sqlite3.
         # The following settings are not used with sqlite3:
         'USER': '',
@@ -37,6 +37,8 @@ LANGUAGE_CODE = 'en-us'
 
 SITE_ID = 1
 
+SITE_ROOT = os.path.dirname(os.path.realpath(__file__))+'/..'
+
 # If you set this to False, Django will make some optimizations so as not
 # to load the internationalization machinery.
 USE_I18N = True
@@ -50,7 +52,7 @@ USE_TZ = True
 
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/var/www/example.com/media/"
-MEDIA_ROOT = '/Users/JuanTejada/develop/workspace/profin/input/'
+MEDIA_ROOT = SITE_ROOT + '/input/'
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
@@ -72,8 +74,8 @@ STATICFILES_DIRS = (
     # Put strings here, like "/home/html/static" or "C:/www/django/static".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
-    '/Users/JuanTejada/develop/workspace/profin/input/',
-    '/Users/JuanTejada/develop/workspace/profin/output/',
+    SITE_ROOT + '/input/',
+    SITE_ROOT + '/output/',
 )
 
 # List of finder classes that know how to find static files in
@@ -113,7 +115,7 @@ TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
-	'/Users/JuanTejada/develop/workspace/profin/templates/',
+    '/Users/JuanTejada/develop/workspace/profin/templates/',
 )
 
 INSTALLED_APPS = (
@@ -127,7 +129,7 @@ INSTALLED_APPS = (
     # 'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
-	'main',
+    'main',
 )
 
 # A sample logging configuration. The only tangible logging
