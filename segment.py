@@ -23,6 +23,7 @@ def main(infile):
     k = 3
     f = ndimage.gaussian_filter(blue_component, 12)
     if DEBUG:
+        print 'Procesando imagen %s usando canal azul' % (infile)
         mahotas.imsave('%s-input.jpg' % infile, f)
 
     clustered = segment_kmeans(f, k)
@@ -30,6 +31,7 @@ def main(infile):
     mask = ndimage.binary_fill_holes(clustered)
 
     if DEBUG:
+        print 'Segmentacion inicial k-means con k=%d' % k
         mahotas.imsave('00masknoholes%s.jpg' % infile, mask)
 
     masked = f * mask
@@ -41,6 +43,7 @@ def main(infile):
     clustered2 = segment_kmeans(masked, k)
 
     if DEBUG:
+        print 'Resegmentacion k-means con k=%d' % k
         mahotas.imsave('02kmeans2%s.jpg' % infile, clustered2)
 
     clustered2[(clustered2 != k-2)] = 0
@@ -51,20 +54,27 @@ def main(infile):
 
     clustered2 = ndimage.binary_fill_holes(clustered2)
 
-    if DEBUG:
-        mahotas.imsave('04kmeans2fnoholes%s.jpg' % infile, clustered2)
-
     labeled, _  = mahotas.label(mask)
-    labeled1 = remove_by_size(labeled, 1500, 16000)
-
     if DEBUG:
+        print 'Etiquetando imagen segmentacion inicial k-means'
+        mahotas.imsave('04kmeans2fnoholes%s.jpg' % infile, clustered2)
         mahotas.imsave('05labeled1%s.jpg' % infile, labeled)
-        mahotas.imsave('07labeled1f%s.jpg' % infile, labeled1)
+        while True:
+            min_max = raw_input('label1 min,max? ')
+            try:
+                min_max = min_max.strip().split(',')
+                min_ = int(min_max[0])
+                max_ = int(min_max[1])
+            except:
+                break
+            labeled1 = remove_by_size(labeled, min_, max_)
+            mahotas.imsave('07labeled1f%d,%d%s.jpg' % (min_, max_, infile), labeled1)
 
     labeled, _  = mahotas.label(clustered2)
-    labeled2 = remove_by_size(labeled, 1500, 18000)
+    labeled2 = remove_by_size(labeled, 1600, 23000)
 
     if DEBUG:
+        print 'Etiquetando imagen re-segmentacion k-means'
         mahotas.imsave('08labeled2f%s.jpg' % infile, labeled)
         mahotas.imsave('10labeled2f%s.jpg' % infile, labeled2)
 
@@ -106,6 +116,7 @@ def main(infile):
     gradient = ndimage.morphology.morphological_gradient(combined, size=(3,3))
     gradient = gradient.astype(np.uint8)
     if DEBUG:
+        print 'Watershed'
         mahotas.imsave('%s-gradient.jpg' % infile, gradient)
     wshed, lines = mahotas.cwatershed(gradient, seeds, return_lines=True)
 
